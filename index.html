@@ -108,40 +108,26 @@ h2{background:#f3d773;color:#5a3c10}
 <div class="ft"><b>Thank you for your purchase! 🪔</b><br>Your gift brings livelihood, dignity and opportunity to persons with mental illness.<p class="addr">Happy Diwali from all of us at Carefactory<br>Carefactory Shop, 611 K.K Nagar, Madurai 625020<br>Shop Contact Number: 96297 26333</p></div>
 </main>
 <div class="bar" id="bar"><div><div style="font-size:13px;color:var(--mu)" id="cnt">0 items</div><b id="tot" style="font-size:18px">₹0</b></div><button class="btn" id="go">Review &amp; Order</button></div>
-
-<!-- ============================================================
-     GOOGLE SHEETS ORDER SAVING
-     1. Deploy your Google Apps Script as a Web App.
-     2. Paste the Web App URL below.
-     3. Upload this HTML file to GitHub Pages.
-     ============================================================ -->
 <script>
-const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGnM60nokeq1-gnqVaMtehxpoLfbuWL65zei2q-hOZGlsOY-kV6-t15ouaJLgF_kgA_w/exec";
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwGnM60nokeq1-gnqVaMtehxpoLfbuWL65zei2q-hOZGlsOY-kV6-t15ouaJLgF_kgA_w/exec';
 
 async function saveOrderToGoogleSheets(orderData) {
-  if (!GOOGLE_SHEETS_WEB_APP_URL ||
-      GOOGLE_SHEETS_WEB_APP_URL.includes("PASTE_YOUR_GOOGLE_APPS_SCRIPT")) {
-    console.warn("Google Sheets URL is not configured. Order was not sent to Google Sheets.");
-    return { ok: false, configured: false };
-  }
+  const body = new URLSearchParams();
+  body.set("orderData", JSON.stringify(orderData));
 
   try {
-    const body = new URLSearchParams();
-    body.set("orderData", JSON.stringify(orderData));
-
-    // application/x-www-form-urlencoded is a simple request and avoids
-    // browser CORS preflight for the Google Apps Script Web App.
     await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+      },
+      body: body.toString()
     });
-
-    return { ok: true, configured: true };
-  } catch (error) {
-    console.error("Google Sheets save failed:", error);
-    return { ok: false, configured: true, error };
+    return true;
+  } catch (err) {
+    console.error("Google Sheets submission failed:", err);
+    return false;
   }
 }
 </script>
@@ -169,72 +155,57 @@ const dm=()=>document.querySelector("[name=dm]:checked").value,pm=()=>document.q
 function tog(){const d=dm()=="Delivery";$("addrBox").classList.toggle("hide",!d);$("pickBox").classList.toggle("hide",d);$("corpBox").classList.toggle("hide",!$("corp").checked)}
 document.querySelectorAll("[name=dm]").forEach(r=>r.onchange=tog);$("corp").onchange=tog;
 function bad(id,c){$(id).classList.toggle("bad",c);$("e_"+id).style.display=c?"block":"none";return c}
-$("go").onclick=()=>{const tot=upd();const items=P.filter(p=>q[p.id]);
+$("go").onclick=async()=>{
+const tot=upd();const items=P.filter(p=>q[p.id]);
 if(!items.length){alert("Please add at least one hamper.");return}
 const ph=$("phone").value.replace(/\D/g,"");let e=false;
 e=bad("name",!$("name").value.trim())||e;e=bad("phone",ph.length<10)||e;e=bad("addr",dm()=="Delivery"&&$("addr").value.trim().length<8)||e;
 if(e){document.querySelector(".bad").scrollIntoView({block:"center"});return}
-const gst=$("gst").value.trim().toUpperCase(),lines=items.map(p=>`• ${p.name} (${p.id}, ${p.size}) x ${q[p.id]} = ${inr(q[p.id]*unit(p))}`);
+
+const gst=$("gst").value.trim().toUpperCase();
+const orderId="CF-"+Date.now();
+const lines=items.map(p=>`• ${p.name} (${p.id}, ${p.size}) x ${q[p.id]} = ${inr(q[p.id]*unit(p))}`);
 const msg=`*Carefactory Diwali Hampers 2026 – New Order*\n\n${lines.join("\n")}\n\n*Total: ${inr(tot)}*\n\n*Name:* ${$("name").value.trim()}\n*Phone:* ${ph}${$("email").value?"\n*Email:* "+$("email").value:""}\n*Receive by:* ${dm()=="Delivery"?"Delivery\n*Address:* "+$("addr").value.trim():"Pick-up at Carefactory Shop, K.K Nagar"}${$("corp").checked?`\n*Company:* ${$("cname").value.trim()||"-"}\n*GST No:* ${gst||"-"}`:""}\n*Payment:* ${pm()} (screenshot to follow)${$("notes").value?"\n*Notes:* "+$("notes").value:""}`;
+
 const orderData={
-  orderId:"",
-  submittedAt:new Date().toISOString(),
-  fullName:$("name").value.trim(),
-  phone:ph,
-  email:$("email").value.trim(),
-  receiveBy:dm(),
-  deliveryAddress:dm()=="Delivery"?$("addr").value.trim():"Pick-up at Carefactory Shop, 611 K.K Nagar, Madurai 625020",
-  companyBulkOrder:$("corp").checked?"Yes":"No",
-  companyName:$("cname").value.trim(),
-  gstNumber:gst,
-  notes:$("notes").value.trim(),
-  paymentMethod:pm(),
-  total:tot,
-  totalFormatted:inr(tot),
-  items:items.map(p=>({id:p.id,name:p.name,size:p.size,quantity:q[p.id],unitPrice:unit(p),lineTotal:q[p.id]*unit(p)})),
-  whatsappMessage:msg,
-  pageUrl:window.location.href
+  "Order ID": orderId,
+  "Full Name": $("name").value.trim(),
+  "Phone": ph,
+  "Email": $("email").value.trim(),
+  "Delivery / Pick-up": dm(),
+  "Delivery Address": dm()=="Delivery"?$("addr").value.trim():"",
+  "Company / Bulk Order": $("corp").checked ? "Yes" : "No",
+  "Company Name": $("cname").value.trim(),
+  "GST Number": gst,
+  "Notes": $("notes").value.trim(),
+  "Payment Method": pm(),
+  "UPI Number": "96292 41333",
+  "Bank Account Details": "R&R Group LLP / Axis Bank / A/c 918020045365151 / IFSC UTIB0002986",
+  "Items": items.map(p=>({
+    id:p.id,name:p.name,size:p.size,quantity:q[p.id],
+    unitPrice:unit(p),lineTotal:q[p.id]*unit(p)
+  })),
+  "Total": tot,
+  "WhatsApp Message": msg,
+  "Page URL": location.href,
+  "Submitted At": new Date().toISOString()
 };
-saveOrderToGoogleSheets(orderData);
+
+const btn=$("go");
+const oldText=btn.textContent;
+btn.disabled=true;
+btn.textContent="Saving Order...";
+
+await saveOrderToGoogleSheets(orderData);
+
+// Show the normal confirmation page and WhatsApp button.
 $("cbox").innerHTML="<b>Your order</b>"+items.map(p=>`<div class="ci"><img src="${IMG[p.img]}" alt=""><div style="flex:1"><b>${p.name}</b> <small>${p.size}</small><br><small>${q[p.id]} × ${inr(unit(p))}</small></div><b>${inr(q[p.id]*unit(p))}</b></div>`).join("")+`<p style="text-align:right;font-size:18px;margin:8px 0 0"><b>Total ${inr(tot)}</b></p>`;
 const esc=s=>s.replace(/</g,"&lt;");
 $("cmeta").innerHTML=`<b>${esc($("name").value.trim())}</b> · ${ph}<br>${dm()=="Delivery"?esc($("addr").value.trim()):"Pick-up: Carefactory Shop, 611 K.K Nagar, Madurai 625020"}${$("corp").checked?`<br>${esc($("cname").value)} · GST ${esc(gst)}`:""}<br>Payment: ${pm()} — UPI 96292 41333 / R&amp;R Group LLP, Axis Bank A/c 918020045365151, IFSC UTIB0002986`;
 $("wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
-$("form").style.display="none";$("bar").style.display="none";$("conf").style.display="block";scrollTo(0,0)};
-$("back").onclick=()=>{$("conf").style.display="none";$("form").style.display="block";$("bar").style.display="flex"};
+$("form").style.display="none";$("bar").style.display="none";$("conf").style.display="block";scrollTo(0,0);
+btn.disabled=false;
+btn.textContent=oldText;
+};
 render();upd();tog();
-</script>
-<script>
-/*
- * Supplemental collector for the existing form.
- * The main Review & Order handler above sends the complete order/cart object.
- * This helper is kept available for future use.
- */
-function collectCurrentFormDataForGoogleSheets() {
-  const form = document.querySelector("form");
-  const data = {};
-
-  if (form) {
-    new FormData(form).forEach((value, key) => {
-      const v = String(value);
-      if (Object.prototype.hasOwnProperty.call(data, key)) {
-        if (!Array.isArray(data[key])) data[key] = [data[key]];
-        data[key].push(v);
-      } else {
-        data[key] = v;
-      }
-    });
-  } else {
-    document.querySelectorAll("input[name], select[name], textarea[name]").forEach(el => {
-      if ((el.type === "checkbox" || el.type === "radio") && !el.checked) return;
-      data[el.name] = el.value;
-    });
-  }
-
-  data.submittedAt = new Date().toISOString();
-  data.pageUrl = window.location.href;
-  return data;
-}
-</script>
-
-</body></html>
+</script></body></html>
