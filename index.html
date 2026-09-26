@@ -122,7 +122,20 @@ add("GB-1","Jewellery Box",G,"Assorted designs","jew",550,550,{moq:2});add("GB-2
 // won't be logged to the sheet until it's filled in.
 const SHEET_ENDPOINT="https://script.google.com/macros/s/AKfycbyLGfFonLI8LnoOL9SDq4QS9qD1-iGEFkYXjJ-9lcVKETSzXLtPymHeyXVpvx9lwy_M/exec";
 function makeOrderId(){const d=new Date();const pad=n=>String(n).padStart(2,"0");const stamp=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+pad(d.getHours())+pad(d.getMinutes());const rand=Math.floor(100+Math.random()*900);return "CF-"+stamp+"-"+rand}
-function logOrderToSheet(payload){if(!SHEET_ENDPOINT||SHEET_ENDPOINT.indexOf("PASTE_")===0)return;try{fetch(SHEET_ENDPOINT,{method:"POST",body:JSON.stringify(payload)}).catch(()=>{})}catch(e){}}
+function logOrderToSheet(payload){
+  if(!SHEET_ENDPOINT || SHEET_ENDPOINT.indexOf("PASTE_")===0) return;
+  try{
+    // text/plain avoids the browser's CORS preflight for the Apps Script Web App.
+    fetch(SHEET_ENDPOINT,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload),
+      mode:"no-cors",
+      keepalive:true
+    }).catch(()=>{});
+  }catch(e){}
+}
+).catch(()=>{})}catch(e){}}
 const SUB={[L]:"Thinai, Black gram, Varagu, Kuthiraivaali & Kambu",[C]:"Cookies: Pista, Chocochip, Coconut & Pepper · Cashews: Garlic, Mint, Cream & Onion, Tangy Tomato",[S]:"Premium assorted cookies, traditional millet ladoos & flavoured cashews"};const q={},fl={},$=id=>document.getElementById(id),inr=n=>"₹"+n.toLocaleString("en-IN");
 const unit=p=>p.moq&&(q[p.id]||0)>=p.moq?Math.round(p.price*.9):p.price;
 const qty=p=>`<div class="q"><button data-m="${p.id}">−</button><span id="q_${p.id}">0</span><button data-p="${p.id}">+</button></div>`;
@@ -146,7 +159,29 @@ if(e){document.querySelector(".bad").scrollIntoView({block:"center"});return}
 const gst=$("gst").value.trim().toUpperCase(),lines=items.map(p=>`• ${p.name} (${p.id}, ${p.size}) x ${q[p.id]} = ${inr(q[p.id]*unit(p))}`);
 const orderId=makeOrderId();
 const msg=`*Carefactory Diwali Hampers 2026 – New Order*\n\n*Order ID:* ${orderId}\n\n${lines.join("\n")}\n\n*Total: ${inr(tot)}*\n\n*Name:* ${$("name").value.trim()}\n*Phone:* ${ph}${$("email").value?"\n*Email:* "+$("email").value:""}\n*Receive by:* ${dm()=="Delivery"?"Delivery\n*Address:* "+$("addr").value.trim():"Pick-up at Carefactory Shop, K.K Nagar"}${$("corp").checked?`\n*Company:* ${$("cname").value.trim()||"-"}\n*GST No:* ${gst||"-"}`:""}\n*Payment:* ${pm()} (screenshot to follow)${$("notes").value?"\n*Notes:* "+$("notes").value:""}`;
-logOrderToSheet({orderId,name:$("name").value.trim(),phone:ph,address:dm()=="Delivery"?$("addr").value.trim():"Pick-up: Carefactory Shop, 611 K.K Nagar, Madurai 625020",delivery:dm(),payment:pm(),items:lines.join(" | "),total:tot,company:$("corp").checked?$("cname").value.trim():"",gst:$("corp").checked?gst:""});
+logOrderToSheet({
+  orderId:orderId,
+  date:new Date().toISOString(),
+  customerName:$("name").value.trim(),
+  phone:ph,
+  deliveryMode:dm(),
+  address:dm()=="Delivery"?$("addr").value.trim():"Pick-up: Carefactory Shop, 611 K.K Nagar, Madurai 625020",
+  paymentMode:pm(),
+  paymentStatus:"Pending",
+  orderStatus:"New",
+  notes:$("notes").value.trim(),
+  company:$("corp").checked?$("cname").value.trim():"",
+  gst:$("corp").checked?gst:"",
+  total:tot,
+  items:items.map(p=>({
+    productName:p.name,
+    code:p.id,
+    netWeight:p.size,
+    qty:q[p.id],
+    unitPrice:unit(p),
+    lineTotal:q[p.id]*unit(p)
+  }))
+});
 $("cbox").innerHTML=`<b>Your order</b> <small style="color:var(--mu)">· ${orderId}</small>`+items.map(p=>`<div class="ci"><img src="${IMG[p.img]}" alt=""><div style="flex:1"><b>${p.name}</b> <small>${p.size}</small><br><small>${q[p.id]} × ${inr(unit(p))}</small></div><b>${inr(q[p.id]*unit(p))}</b></div>`).join("")+`<p style="text-align:right;font-size:18px;margin:8px 0 0"><b>Total ${inr(tot)}</b></p>`;
 const esc=s=>s.replace(/</g,"&lt;");
 $("cmeta").innerHTML=`<b>${esc($("name").value.trim())}</b> · ${ph}<br>${dm()=="Delivery"?esc($("addr").value.trim()):"Pick-up: Carefactory Shop, 611 K.K Nagar, Madurai 625020"}${$("corp").checked?`<br>${esc($("cname").value)} · GST ${esc(gst)}`:""}<br>Payment: ${pm()} — UPI 96292 41333 / R&amp;R Group LLP, Axis Bank A/c 918020045365151, IFSC UTIB0002986`;
