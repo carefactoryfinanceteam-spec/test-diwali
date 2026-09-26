@@ -120,7 +120,7 @@ add("GB-1","Jewellery Box",G,"Assorted designs","jew",550,550,{moq:2});add("GB-2
 // Paste the URL you get after deploying the Apps Script as a Web App.
 // Orders still send fine via WhatsApp if this is left as-is; they just
 // won't be logged to the sheet until it's filled in.
-const SHEET_ENDPOINT="https://script.google.com/macros/s/AKfycbwKaIhoISAHPBhK0K0FhJlXkDGkk9V9HH3AcJrzgXtHMfit9v_YsCevooOeY7tesled/exec";
+const SHEET_ENDPOINT="https://script.google.com/macros/s/AKfycbyLGfFonLI8LnoOL9SDq4QS9qD1-iGEFkYXjJ-9lcVKETSzXLtPymHeyXVpvx9lwy_M/exec";
 function makeOrderId(){const d=new Date();const pad=n=>String(n).padStart(2,"0");const stamp=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+pad(d.getHours())+pad(d.getMinutes());const rand=Math.floor(100+Math.random()*900);return "CF-"+stamp+"-"+rand}
 function logOrderToSheet(payload){
   if(!SHEET_ENDPOINT || SHEET_ENDPOINT.indexOf("PASTE_")===0) return;
