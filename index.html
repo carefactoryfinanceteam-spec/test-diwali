@@ -122,7 +122,7 @@ add("GB-1","Jewellery Box",G,"Assorted designs","jew",550,550,{moq:2});add("GB-2
 // won't be logged to the sheet until it's filled in.
 const SHEET_ENDPOINT="https://script.google.com/macros/s/AKfycbyLGfFonLI8LnoOL9SDq4QS9qD1-iGEFkYXjJ-9lcVKETSzXLtPymHeyXVpvx9lwy_M/exec";
 function makeOrderId(){const d=new Date();const pad=n=>String(n).padStart(2,"0");const stamp=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+pad(d.getHours())+pad(d.getMinutes());const rand=Math.floor(100+Math.random()*900);return "CF-"+stamp+"-"+rand}
-function logOrderToSheet(payload){if(!SHEET_ENDPOINT||SHEET_ENDPOINT.indexOf("PASTE_")===0)return;try{fetch(SHEET_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)}).catch(()=>{})}catch(e){}}
+function logOrderToSheet(payload){if(!SHEET_ENDPOINT||SHEET_ENDPOINT.indexOf("PASTE_")===0)return;try{fetch(SHEET_ENDPOINT,{method:"POST",body:JSON.stringify(payload)}).catch(()=>{})}catch(e){}}
 const SUB={[L]:"Thinai, Black gram, Varagu, Kuthiraivaali & Kambu",[C]:"Cookies: Pista, Chocochip, Coconut & Pepper · Cashews: Garlic, Mint, Cream & Onion, Tangy Tomato",[S]:"Premium assorted cookies, traditional millet ladoos & flavoured cashews"};const q={},fl={},$=id=>document.getElementById(id),inr=n=>"₹"+n.toLocaleString("en-IN");
 const unit=p=>p.moq&&(q[p.id]||0)>=p.moq?Math.round(p.price*.9):p.price;
 const qty=p=>`<div class="q"><button data-m="${p.id}">−</button><span id="q_${p.id}">0</span><button data-p="${p.id}">+</button></div>`;
