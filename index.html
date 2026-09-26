@@ -152,7 +152,7 @@ fd.append("PaymentMethod",pm());
 fd.append("Notes",$("notes").value||"");
 fd.append("Items",lines.join(" | "));
 fd.append("TotalAmount",tot);
-fetch(SHEET_URL,{method:"POST",body:fd}).catch(()=>{});
+fetch(SHEET_URL,{method:"POST",mode:"no-cors",body:fd}).catch(()=>{});
 }catch(err){}
 $("cbox").innerHTML="<b>Your order</b>"+items.map(p=>`<div class="ci"><img src="${IMG[p.img]}" alt=""><div style="flex:1"><b>${p.name}</b> <small>${p.size}</small><br><small>${q[p.id]} × ${inr(unit(p))}</small></div><b>${inr(q[p.id]*unit(p))}</b></div>`).join("")+`<p style="text-align:right;font-size:18px;margin:8px 0 0"><b>Total ${inr(tot)}</b></p>`;
 const esc=s=>s.replace(/</g,"&lt;");
