@@ -208,4 +208,28 @@ btn.disabled=false;
 btn.textContent=oldText;
 };
 render();upd();tog();
+  <form id="orderForm">
+  <input type="text" name="Name" placeholder="Name" required>
+  <input type="email" name="Email" placeholder="Email" required>
+  <input type="text" name="Product" placeholder="Product" required>
+  <input type="number" name="Quantity" placeholder="Quantity" required>
+  <button type="submit">Place Order</button>
+</form>
+
+<script>
+document.getElementById("orderForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+
+  fetch("https://script.google.com/macros/s/AKfycbzyjsvAzOd8ha6reS_V32421H3S6JhRxi7nFm7Id_XB3HktYTbAmM6_NX7kuqnOuixi/exec", {
+    method: "POST",
+    body: formData
+  })
+  .then(() => {
+    alert("Order submitted!");
+    this.reset();
+  })
+  .catch(() => alert("Something went wrong. Please try again."));
+});
+</script>
 </script></body></html>
